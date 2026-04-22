@@ -38,12 +38,13 @@ socketio = SocketIO(
     app,
     cors_allowed_origins="*",
     async_mode='eventlet',
-    ping_timeout=20,
-    ping_interval=10,
+    ping_timeout=60,
+    ping_interval=25,
     max_http_buffer_size=16 * 1024 * 1024,
     logger=False,
     engineio_logger=False,
-    compression_threshold=1024,
+    allow_upgrades=True,
+    transports=['polling', 'websocket'],
 )
 
 DB_NAME = "chat.db"
@@ -3847,12 +3848,13 @@ chat_html = """<!DOCTYPE html>
         // Enhanced socket connection
         var socket = io({
             reconnection: true,
-            reconnectionDelay: 1000,
-            reconnectionDelayMax: 5000,
+            reconnectionDelay: 2000,
+            reconnectionDelayMax: 10000,
             reconnectionAttempts: Infinity,
-            timeout: 20000,
+            timeout: 30000,
             autoConnect: true,
-            transports: ['websocket', 'polling']
+            transports: ['polling', 'websocket'],
+            upgrade: true,
         });
 
         // Connection quality monitoring
@@ -6477,9 +6479,10 @@ group_chat_html = """<!DOCTYPE html>
 
     // ── Socket ────────────────────────────────────────────────────
     const socket = io({
-        reconnection:true, reconnectionDelay:1000,
-        reconnectionDelayMax:5000, reconnectionAttempts:Infinity,
-        timeout:20000, transports:['websocket','polling']
+        reconnection:true, reconnectionDelay:2000,
+        reconnectionDelayMax:10000, reconnectionAttempts:Infinity,
+        timeout:30000, transports:['polling','websocket'],
+        upgrade:true,
     });
 
     socket.on('connect', () => {
