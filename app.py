@@ -22,7 +22,7 @@ import logging
 logging.basicConfig(level=logging.WARNING)
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = secrets.token_hex(32)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'exomnia-fixed-secret-key-2024')
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
@@ -7520,16 +7520,18 @@ def security_info():
     </html>
     """
 
-# ----------------- Server Run -----------------
-if __name__=="__main__":
+# Initialize DB when loaded by gunicorn
+with app.app_context():
     init_db()
-    # Run optimizer once at startup — improves query planning for the session
     _opt_conn = get_db_connection()
     try:
         _opt_conn.execute("PRAGMA optimize")
         _opt_conn.commit()
     finally:
         return_db_connection(_opt_conn)
+
+# ----------------- Server Run -----------------
+if __name__=="__main__":
     print("Exomnia Super App on http://0.0.0.0:5000")
     print("Main App: http://0.0.0.0:5000/main")
     print("Chat Login: http://0.0.0.0:5000/")
