@@ -22,8 +22,7 @@ import logging
 logging.basicConfig(level=logging.WARNING)
 
 app = Flask(__name__)
-# Use a fixed SECRET_KEY from environment so encryption keys stay stable across restarts
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'exomnia-default-secret-key-change-in-production')
+app.config['SECRET_KEY'] = secrets.token_hex(32)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
@@ -379,16 +378,6 @@ def init_db():
 def validate_phone(phone):
     pattern = r'^\+\d{1,4}\d{6,14}$'
     return re.match(pattern, phone) is not None
-
-# Initialize database at module level — works with both gunicorn and direct run
-init_db()
-# Run optimizer once at startup
-_opt_conn = get_db_connection()
-try:
-    _opt_conn.execute("PRAGMA optimize")
-    _opt_conn.commit()
-finally:
-    return_db_connection(_opt_conn)
 
 # ----------------- Typing Status -----------------
 typing_status = {}
@@ -7533,6 +7522,14 @@ def security_info():
 
 # ----------------- Server Run -----------------
 if __name__=="__main__":
+    init_db()
+    # Run optimizer once at startup — improves query planning for the session
+    _opt_conn = get_db_connection()
+    try:
+        _opt_conn.execute("PRAGMA optimize")
+        _opt_conn.commit()
+    finally:
+        return_db_connection(_opt_conn)
     print("Exomnia Super App on http://0.0.0.0:5000")
     print("Main App: http://0.0.0.0:5000/main")
     print("Chat Login: http://0.0.0.0:5000/")
